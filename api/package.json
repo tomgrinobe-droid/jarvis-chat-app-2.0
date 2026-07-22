@@ -1,0 +1,9 @@
+{
+  "name": "jarvis-chat-app",
+  "version": "1.0.0",
+  "description": "Jarvis Chat App Proxy",
+  "main": "api/chat.js",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}
