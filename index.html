@@ -53,18 +53,23 @@
             border-radius: 20px;
             padding: 10px 20px;
         }
+        #input button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
     <div id="chat"></div>
     <div id="input">
         <input type="text" id="userInput" placeholder="Type a message...">
-        <button onclick="sendMessage()">Send</button>
+        <button onclick="sendMessage()" id="sendButton">Send</button>
     </div>
 
     <script>
         const chat = document.getElementById('chat');
         const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
 
         function addMessage(text, isUser) {
             const messageDiv = document.createElement('div');
@@ -79,14 +84,45 @@
             const text = userInput.value.trim();
             if (!text) return;
 
+            // Disable button and input while loading
+            sendButton.disabled = true;
+            userInput.disabled = true;
+
+            // Add user message to chat
             addMessage(text, true);
             userInput.value = '';
 
-            setTimeout(() => {
-                addMessage("At your service, sir. How may I assist you today?", false);
-            }, 1000);
+            try {
+                // Replace YOUR_VERCEL_PROXY_URL with your actual Vercel URL (e.g., jarvis-chat-app)
+                const response = await fetch('https://YOUR_VERCEL_PROXY_URL.vercel.app/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: [{ role: 'user', content: text }],
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Proxy error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const jarvisResponse = data.choices[0].message.content;
+                addMessage(jarvisResponse, false);
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage(`Sorry, I encountered an error: ${error.message}`, false);
+            } finally {
+                // Re-enable button and input
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                userInput.focus();
+            }
         }
 
+        // Allow sending with Enter key
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
